@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import styled from "styled-components";
-import DocumentUpload from "./components/DocumentUpload";
-import DocumentSearch from "./components/DocumentSearch";
-import DocumentList from "./components/DocumentList";
 import empty1 from "./assets/empty1.jpg";
 import empty2 from "./assets/empty2.jpg";
+
+const DocumentUpload = React.lazy(() => import("./components/DocumentUpload"));
+const DocumentSearch = React.lazy(() => import("./components/DocumentSearch"));
+const DocumentList = React.lazy(() => import("./components/DocumentList"));
 
 export interface Document {
   id: string;
@@ -50,6 +51,12 @@ const EmptyImage = styled.img`
   height: 200px;
 `;
 
+const LoadingMessage = styled.p`
+  text-align: center;
+  font-size: 18px;
+  color: #666;
+`;
+
 const App: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,33 +98,53 @@ const App: React.FC = () => {
     <Container>
       <Wrapper>
         <Title>Document Management System</Title>
-        <DocumentUpload onUpload={handleUpload} />
-        <DocumentSearch onSearch={handleSearch} />
+        <Suspense
+          fallback={<LoadingMessage>Loading upload form...</LoadingMessage>}
+        >
+          <DocumentUpload onUpload={handleUpload} />
+        </Suspense>
+        <Suspense
+          fallback={<LoadingMessage>Loading search form...</LoadingMessage>}
+        >
+          <DocumentSearch onSearch={handleSearch} />
+        </Suspense>
 
         <SectionTitle>Public Documents</SectionTitle>
         {publicDocuments.length === 0 ? (
           <ImageContainer>
-            <EmptyImage src={empty1} />
+            <EmptyImage src={empty1} alt="No public documents" />
           </ImageContainer>
         ) : (
-          <DocumentList
-            documents={publicDocuments}
-            togglePrivacy={togglePrivacy}
-            deleteDocument={deleteDocument}
-          />
+          <Suspense
+            fallback={
+              <LoadingMessage>Loading public documents...</LoadingMessage>
+            }
+          >
+            <DocumentList
+              documents={publicDocuments}
+              togglePrivacy={togglePrivacy}
+              deleteDocument={deleteDocument}
+            />
+          </Suspense>
         )}
 
         <SectionTitle>Private Documents</SectionTitle>
         {privateDocuments.length === 0 ? (
           <ImageContainer>
-            <EmptyImage src={empty2} />
+            <EmptyImage src={empty2} alt="No private documents" />
           </ImageContainer>
         ) : (
-          <DocumentList
-            documents={privateDocuments}
-            togglePrivacy={togglePrivacy}
-            deleteDocument={deleteDocument}
-          />
+          <Suspense
+            fallback={
+              <LoadingMessage>Loading private documents...</LoadingMessage>
+            }
+          >
+            <DocumentList
+              documents={privateDocuments}
+              togglePrivacy={togglePrivacy}
+              deleteDocument={deleteDocument}
+            />
+          </Suspense>
         )}
       </Wrapper>
     </Container>
